@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Earth</title>
+  <script src="three.min.js"></script>
+</head>
+<body>
+  <script>
+    // Set up the scene, camera, and renderer
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Add Earth texture
+    var textureLoader = new THREE.TextureLoader();
+    textureLoader.load('world.topo.200404.3x21600x10800.jpg', function(texture) {
+      var geometry = new THREE.SphereGeometry(1, 32, 32);
+      var material = new THREE.MeshBasicMaterial({ map: texture });
+      var earth = new THREE.Mesh(geometry, material);
+      scene.add(earth);
+
+      // Coordinates for Manchester, UK
+      var lat = 53.4808;
+      var lon = -2.2426;
+
+      // Convert lat/lon to 3D coordinates
+      var phi = (90 - lat) * (Math.PI / 180);
+      var theta = (lon + 180) * (Math.PI / 180);
+      var x = - Math.sin(phi) * Math.cos(theta);
+      var y = Math.cos(phi);
+      var z = Math.sin(phi) * Math.sin(theta);
+
+      // Create red dot
+      var dotGeometry = new THREE.Geometry();
+      dotGeometry.vertices.push(new THREE.Vector3(x, y, z));
+      var dotMaterial = new THREE.PointsMaterial({ size: 0.1, sizeAttenuation: false, color: 0xff0000 });
+      var dot = new THREE.Points(dotGeometry, dotMaterial);
+      scene.add(dot);
+
+      // Animate the dot to pulsate
+      var scale = 1;
+      var direction = 1;
+      function animate() {
+        requestAnimationFrame(animate);
+        earth.rotation.y += 0.005;
+
+        scale += direction * 0.01;
+        if (scale > 1.2 || scale < 0.8) {
+          direction *= -1;
+        }
+        dot.scale.set(scale, scale, scale);
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    });
+
+    camera.position.z = 5;
+  </script>
+</body>
+</html>
